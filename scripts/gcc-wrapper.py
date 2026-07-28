@@ -44,6 +44,22 @@ allowed_warnings = set([
     "inet_connection_sock.c:430",
     "inet_connection_sock.c:467",
     "inet6_connection_sock.c:89",
+    # add_verity_corruption_tag() is only called from inside
+    # #ifdef CONFIG_PANIC_ON_DM_VERITY_ERRORS (drivers/md/dm-verity-target.c),
+    # which this tree's tama_akari_defconfig deliberately does not set (matching
+    # every defconfig in sony-sdm845/android_kernel_sony_sdm845 @ lineage-20,
+    # despite Sony's own arch/arm64/configs/diffconfig/common_diffconfig setting
+    # it =y for stock/production firmware -- see lineage-port-attempt commit
+    # for the full writeup of that discrepancy). The function's only real
+    # statement is already commented out in this source drop
+    # (rdtags_add_tag(...) is dead code as shipped), so with the ifdef'd-out
+    # call site this is a true, harmless dead-code warning under our config,
+    # not a sign of a real problem. Whitelisting it here rather than touching
+    # dm-verity-target.c itself or flipping PANIC_ON_DM_VERITY_ERRORS, since
+    # this file is squarely in the project's AVB/dm-verity risk zone and this
+    # task is only meant to get past a build gate, not make a verified-boot
+    # policy decision.
+    "dm-verity-target.c:217",
  ])
 
 # Capture the name of the object file, can find it.
@@ -78,7 +94,7 @@ def run_gcc():
     compiler = sys.argv[0]
 
     try:
-        proc = subprocess.Popen(args, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(args, stderr=subprocess.PIPE, universal_newlines=True)
         for line in proc.stderr:
             print(line, end="")
             interpret_warning(line)
