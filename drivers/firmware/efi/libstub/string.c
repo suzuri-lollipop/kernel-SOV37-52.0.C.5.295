@@ -55,3 +55,21 @@ int strncmp(const char *cs, const char *ct, size_t count)
 	return 0;
 }
 #endif
+
+/*
+ * Unlike strstr/strncmp above, this is NOT guarded by
+ * #ifndef __HAVE_ARCH_STRRCHR: arch/arm64/include/asm/string.h always
+ * defines __HAVE_ARCH_STRRCHR (arm64 has its own optimized strrchr under
+ * arch/arm64/lib/), but that file is not part of this freestanding EFI
+ * stub build (see the file list in Makefile), so the arch-provided
+ * strrchr symbol is unavailable here and must be defined unconditionally.
+ */
+char *strrchr(const char *s, int c)
+{
+	const char *last = NULL;
+	do {
+		if (*s == (char)c)
+			last = s;
+	} while (*s++);
+	return (char *)last;
+}
