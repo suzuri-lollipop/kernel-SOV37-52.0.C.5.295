@@ -15,8 +15,18 @@
 #
 # All of this tree's own hand-adjustments from the prior transplant were independently confirmed
 # correct against the real stock config while producing this file: CONFIG_MACH_SONY_AKARI_KDDI=y (not
-# plain AKARI), CONFIG_NFC_NQ=y with no PN553_DEVICES symbol, and no CONFIG_TOUCHSCREEN_CLEARPAD* at
-# all (real touch stack is CONFIG_TOUCHSCREEN_SYNAPTICS_DSX*, present and enabled below).
+# plain AKARI), CONFIG_NFC_NQ=y with no PN553_DEVICES symbol.
+#
+# CORRECTION (2026-08-06): the earlier claim here that "the real touch stack is
+# CONFIG_TOUCHSCREEN_SYNAPTICS_DSX*" was wrong, and cost a boot with no working touchscreen.
+# akari's panel is a Synaptics TD4353 TDDI part driven by Sony's own clearpad driver
+# (stock ships it as clearpad_core.ko). The DT declares compatible = "synaptics,clearpad"
+# (somc-tama-touch.dtsi), which nothing in synaptics_dsx matches -- that driver only binds
+# "synaptics,dsx-i2c"/"-spi"/"-rmi-hid-i2c", and no such node exists in any tama DTS. The
+# clearpad sources were absent from this kernel drop entirely (never in its git history);
+# they were ported in from kernel/sony/sdm845-reference-global (LineageOS lineage-20) along
+# with include/linux/clearpad.h and the header-only evdt_helper.h. incell.h is byte-identical
+# between the two trees apart from a copyright block, so the TDDI power handshake is compatible.
 #
 CONFIG_LOCALVERSION="-perf"
 # CONFIG_LOCALVERSION_AUTO is not set
@@ -334,11 +344,9 @@ CONFIG_KEYBOARD_GPIO=y
 CONFIG_INPUT_JOYSTICK=y
 CONFIG_JOYSTICK_XPAD=y
 CONFIG_INPUT_TOUCHSCREEN=y
-CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_CORE=y
-CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI_DEV=y
-CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE=y
-CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE_EXTRA_SYSFS=y
-CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_TEST_REPORTING=y
+CONFIG_TOUCHSCREEN_CLEARPAD=y
+CONFIG_TOUCHSCREEN_CLEARPAD_I2C=y
+CONFIG_TOUCHSCREEN_CLEARPAD_RMI_DEV=y
 CONFIG_INPUT_MISC=y
 CONFIG_INPUT_QPNP_POWER_ON=y
 CONFIG_INPUT_UINPUT=y
