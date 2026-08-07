@@ -2582,6 +2582,11 @@ struct cfg80211_nan_func {
  *	use %WLAN_STATUS_UNSPECIFIED_FAILURE if user space cannot give you
  *	the real status code for failures. Used only for the authentication
  *	response command interface (user space to driver).
+ * @pmkid: The identifier to refer a PMKSA. Optional; NULL when user space did
+ *	not supply NL80211_ATTR_PMKID. Backported from the 4.9.227 cfg80211 on
+ *	2026-08-07 because qcacld-3.0 (wlan_hdd_extauth_copy_pmkid) requires it
+ *	for WPA3-SAE/OWE external auth. Appended at the end of the struct so no
+ *	existing member offset moves.
  */
 struct cfg80211_external_auth_params {
 	enum nl80211_external_auth_action action;
@@ -2589,6 +2594,7 @@ struct cfg80211_external_auth_params {
 	struct cfg80211_ssid ssid;
 	unsigned int key_mgmt_suite;
 	u16 status;
+	const u8 *pmkid;
 };
 
 /**

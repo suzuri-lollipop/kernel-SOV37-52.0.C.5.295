@@ -616,6 +616,13 @@ CONFIG_ANDROID_LOW_MEMORY_KILLER_STATS=y
 CONFIG_ION=y
 CONFIG_ION_MSM=y
 CONFIG_ALLOC_BUFFERS_IN_4K_CHUNKS=y
+# Wi-Fi (2026-08-07): qcacld-3.0 + qca-wifi-host-cmn were absent from this kernel drop
+# entirely (Sony ships WLAN as an out-of-tree DLKM), so no wlan0 ever appeared. Sources
+# ported in from kernel/sony/sdm845-reference-global exactly like clearpad was. Built =y
+# (not =m) because this tree has no DLKM plumbing -- same reasoning as the techpack audio
+# drivers. Everything else the driver needs (WCNSS_MEM_PRE_ALLOC, CLD_LL_CORE, CNSS_GENL,
+# ICNSS, CFG80211) was already enabled here; QCA_CLD_WLAN was the only missing symbol.
+CONFIG_QCA_CLD_WLAN=y
 CONFIG_GSI=y
 CONFIG_IPA3=y
 CONFIG_RMNET_IPA3=y

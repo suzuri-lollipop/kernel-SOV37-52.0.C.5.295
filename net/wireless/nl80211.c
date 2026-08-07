@@ -12085,6 +12085,14 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
 
 	params.status = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
 
+	/* Backported from 4.9.227 together with the cfg80211_external_auth_params
+	 * ::pmkid member, so wpa_supplicant can hand a cached PMKID back to
+	 * qcacld-3.0 for WPA3-SAE/OWE. Optional attribute: params was memset to 0
+	 * above, so leaving it unset keeps the previous behaviour exactly.
+	 */
+	if (info->attrs[NL80211_ATTR_PMKID])
+		params.pmkid = nla_data(info->attrs[NL80211_ATTR_PMKID]);
+
 	return rdev_external_auth(rdev, dev, &params);
 }
 
