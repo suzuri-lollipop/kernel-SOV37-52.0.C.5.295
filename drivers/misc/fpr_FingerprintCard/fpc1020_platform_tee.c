@@ -464,13 +464,56 @@ static ssize_t irq_ack(struct device *dev,
 }
 static DEVICE_ATTR(irq, 0600 | 0200, irq_get, irq_ack);
 
+/*
+ * Legacy node names.
+ *
+ * The fpc_fingerprint@2.1_HIDL-service blob shipped on SOV37 (Android 9) was
+ * built against an older revision of this driver and writes to spi_prepare,
+ * wake_lock and pm_wakeup. This revision renamed the first two to
+ * device_prepare and handle_wakelock and folded pm_wakeup into wakeup_enable,
+ * so the HAL aborted in fpc_hal_open() on the very first write:
+ *
+ *   E fpc_tac: fpc_sysfs_node_write openat: spi_prepare failed, ENOENT
+ *   E fpc_fingerprint_hal: fpc_hal_open failed
+ *
+ * Expose the old names as aliases rather than renaming, so a newer HAL keeps
+ * working too. rootdir/etc/ueventd.qcom.rc already assigns ownership and mode
+ * to exactly these legacy names.
+ */
+static DEVICE_ATTR(spi_prepare, 0200, NULL, device_prepare_set);
+static DEVICE_ATTR(wake_lock, 0200, NULL, handle_wakelock_cmd);
+
+/*
+ * pm_wakeup carries the same meaning as wakeup_enable - whether the driver may
+ * wake the platform from an interrupt. The old HAL may write "1"/"0" here where
+ * wakeup_enable takes "enable"/"disable", so accept both spellings.
+ */
+static ssize_t pm_wakeup_set(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
+
+	if (count >= 1 && (buf[0] == '1' || buf[0] == '0')) {
+		mutex_lock(&fpc1020->lock);
+		atomic_set(&fpc1020->wakeup_enabled, buf[0] == '1');
+		mutex_unlock(&fpc1020->lock);
+		return count;
+	}
+
+	return wakeup_enable_set(dev, attr, buf, count);
+}
+static DEVICE_ATTR(pm_wakeup, 0200, NULL, pm_wakeup_set);
+
 static struct attribute *attributes[] = {
 	&dev_attr_pinctl_set.attr,
 	&dev_attr_device_prepare.attr,
+	&dev_attr_spi_prepare.attr,
 	&dev_attr_regulator_enable.attr,
 	&dev_attr_hw_reset.attr,
 	&dev_attr_wakeup_enable.attr,
+	&dev_attr_pm_wakeup.attr,
 	&dev_attr_handle_wakelock.attr,
+	&dev_attr_wake_lock.attr,
 	&dev_attr_clk_enable.attr,
 	&dev_attr_irq.attr,
 	NULL

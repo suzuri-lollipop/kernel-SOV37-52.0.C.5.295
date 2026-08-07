@@ -366,9 +366,22 @@
 		fpc,gpio_irq    = <&tlmm 121 0x0>;
 		vdd_ana-supply  = <&pm8998_lvs1>;
 
-		pinctrl-names = "fpc1145_reset_reset",
-				"fpc1145_reset_active",
-				"fpc1145_irq_active";
+		/*
+		 * These carried Sony's own fpc1145_* spelling, but the driver
+		 * this tree actually builds, drivers/misc/fpr_FingerprintCard,
+		 * looks the states up as fpc1020_* (pctl_names[], plus the same
+		 * literals inline in hw_reset() and device_prepare()). The
+		 * mismatch made probe bail out before creating any sysfs node:
+		 *
+		 *   E fpc1020 soc:fpc1145: cannot find 'fpc1020_reset_reset'
+		 *   W fpc1020: probe of soc:fpc1145 failed with error -22
+		 *
+		 * Renamed here rather than in the driver, where it would mean
+		 * touching the same string in half a dozen places.
+		 */
+		pinctrl-names = "fpc1020_reset_reset",
+				"fpc1020_reset_active",
+				"fpc1020_irq_active";
 
 		pinctrl-0 = <&sdm_gpio_40>;
 		pinctrl-1 = <&sdm_gpio_40_output_high>;

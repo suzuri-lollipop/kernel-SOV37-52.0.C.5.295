@@ -1,0 +1,184 @@
++ cd /home/suzuri/android/lineage/kernel/sony/sdm845
++ git checkout lineage-port-attempt
+Already on 'lineage-port-attempt'
++ TOOLCHAIN=/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
++ export 'PATH=/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Users/Suzuri/bin:/mnt/c/Program Files/Git/mingw64/bin:/mnt/c/Program Files/Git/usr/local/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Program Files/Git/mingw64/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Users/Suzuri/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3/bin/x64:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.1/bin/x64:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.1/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/libnvvp:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/libnvvp:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0:/mnt/c/WINDOWS/System32/OpenSSH:/mnt/c/Program Files/Apollo:/mnt/c/Program Files/Apollo/tools:/mnt/c/Program Files/dotnet:/mnt/c/Program Files/Microsoft VS Code/bin:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/Git-Xet:/mnt/c/Program Files/Tailscale:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/CMake/bin:/mnt/c/Program Files (x86)/llama.cpp/bin:/mnt/c/Program Files/nodejs:/mnt/c/Program Files/RedHat/Podman:/mnt/c/Program Files/PowerShell/7:/mnt/c/Program Files/GitHub CLI:/mnt/c/Users/Suzuri/.grok/bin:/mnt/c/Users/Suzuri/.unsloth/studio/bin:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Python313/Scripts:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Python313:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Launcher:/mnt/c/Users/Suzuri/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Suzuri/.dotnet/tools:/mnt/c/Users/Suzuri/.lmstudio/bin:/mnt/c/Users/Suzuri/AppData/Local/Microsoft/WinGet/Links:/mnt/c/Users/Suzuri/AppData/Roaming/npm:/mnt/c/Users/Suzuri/AppData/Roaming/Python/Python313/Scripts:/mnt/c/Users/Suzuri/AppData/Local/Programs/Podman:/mnt/c/Users/Suzuri/.local/bin:/mnt/c/Users/Suzuri/AppData/Local/Android/Sdk/platform-tools:/mnt/c/Program Files/Git/usr/bin/vendor_perl:/mnt/c/Program Files/Git/usr/bin/core_perl'
++ PATH='/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Users/Suzuri/bin:/mnt/c/Program Files/Git/mingw64/bin:/mnt/c/Program Files/Git/usr/local/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Program Files/Git/mingw64/bin:/mnt/c/Program Files/Git/usr/bin:/mnt/c/Users/Suzuri/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3/bin/x64:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.1/bin/x64:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.1/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/libnvvp:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/libnvvp:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0:/mnt/c/WINDOWS/System32/OpenSSH:/mnt/c/Program Files/Apollo:/mnt/c/Program Files/Apollo/tools:/mnt/c/Program Files/dotnet:/mnt/c/Program Files/Microsoft VS Code/bin:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/Git-Xet:/mnt/c/Program Files/Tailscale:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/CMake/bin:/mnt/c/Program Files (x86)/llama.cpp/bin:/mnt/c/Program Files/nodejs:/mnt/c/Program Files/RedHat/Podman:/mnt/c/Program Files/PowerShell/7:/mnt/c/Program Files/GitHub CLI:/mnt/c/Users/Suzuri/.grok/bin:/mnt/c/Users/Suzuri/.unsloth/studio/bin:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Python313/Scripts:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Python313:/mnt/c/Users/Suzuri/AppData/Local/Programs/Python/Launcher:/mnt/c/Users/Suzuri/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Suzuri/.dotnet/tools:/mnt/c/Users/Suzuri/.lmstudio/bin:/mnt/c/Users/Suzuri/AppData/Local/Microsoft/WinGet/Links:/mnt/c/Users/Suzuri/AppData/Roaming/npm:/mnt/c/Users/Suzuri/AppData/Roaming/Python/Python313/Scripts:/mnt/c/Users/Suzuri/AppData/Local/Programs/Podman:/mnt/c/Users/Suzuri/.local/bin:/mnt/c/Users/Suzuri/AppData/Local/Android/Sdk/platform-tools:/mnt/c/Program Files/Git/usr/bin/vendor_perl:/mnt/c/Program Files/Git/usr/bin/core_perl'
++ OUT=/tmp/kbuild-akari
++ rm -rf /tmp/kbuild-akari
++ mkdir -p /tmp/kbuild-akari
++ make -j32 O=/tmp/kbuild-akari ARCH=arm64 CROSS_COMPILE=/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android- tama_akari_defconfig
++ tail -100
+make[1]: Entering directory '/tmp/kbuild-akari'
+  GEN     ./Makefile
+  HOSTCC  scripts/basic/fixdep
+  HOSTCC  scripts/kconfig/conf.o
+  SHIPPED scripts/kconfig/zconf.tab.c
+  SHIPPED scripts/kconfig/zconf.lex.c
+  SHIPPED scripts/kconfig/zconf.hash.c
+  HOSTCC  scripts/kconfig/zconf.tab.o
+In file included from scripts/kconfig/zconf.tab.c:2578:
+In function ‘dep_stack_insert’,
+    inlined from ‘sym_check_print_recursive’ at /home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c:1103:3,
+    inlined from ‘sym_check_deps’ at /home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c:1280:3:
+/home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c:1079:19: warning: storing the address of local variable ‘cv_stack’ in ‘check_top’ [-Wdangling-pointer=]
+ 1079 |         check_top = stack;
+      |         ~~~~~~~~~~^~~~~~~
+/home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c: In function ‘sym_check_deps’:
+/home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c:1100:26: note: ‘cv_stack’ declared here
+ 1100 |         struct dep_stack cv_stack;
+      |                          ^~~~~~~~
+/home/suzuri/android/lineage/kernel/sony/sdm845/scripts/kconfig/symbol.c:1070:4: note: ‘check_top’ declared here
+ 1070 | } *check_top;
+      |    ^~~~~~~~~
+  HOSTLD  scripts/kconfig/conf
+drivers/usb/gadget/Kconfig:606:warning: defaults for choice values not supported
+#
+# configuration written to .config
+#
+make[1]: Leaving directory '/tmp/kbuild-akari'
++ echo '=== defconfig exit: 0 ==='
+=== defconfig exit: 0 ===
++ echo '=== running oldconfig to surface any remaining unresolved symbols (non-interactive) ==='
+=== running oldconfig to surface any remaining unresolved symbols (non-interactive) ===
++ yes ''
++ make -j32 O=/tmp/kbuild-akari ARCH=arm64 CROSS_COMPILE=/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android- oldconfig
++ tail -150
+make[1]: Entering directory '/tmp/kbuild-akari'
+  GEN     ./Makefile
+scripts/kconfig/conf  --oldconfig Kconfig
+drivers/usb/gadget/Kconfig:606:warning: defaults for choice values not supported
+#
+# configuration written to .config
+#
+make[1]: Leaving directory '/tmp/kbuild-akari'
++ echo '=== oldconfig exit: 0 ==='
+=== oldconfig exit: 0 ===
++ echo '=== attempting a partial compile (prepare + scripts only, NOT a full build) to catch gross Kconfig/Makefile wiring errors cheaply ==='
+=== attempting a partial compile (prepare + scripts only, NOT a full build) to catch gross Kconfig/Makefile wiring errors cheaply ===
++ make -j32 O=/tmp/kbuild-akari ARCH=arm64 CROSS_COMPILE=/home/suzuri/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android- HOSTCFLAGS=-fcommon prepare modules_prepare
++ tail -200
+make[1]: Entering directory '/tmp/kbuild-akari'
+  HOSTCC  scripts/basic/fixdep
+  GEN     ./Makefile
+  HOSTCC  scripts/kconfig/conf.o
+  HOSTCC  scripts/kconfig/zconf.tab.o
+  HOSTLD  scripts/kconfig/conf
+scripts/kconfig/conf  --silentoldconfig Kconfig
+drivers/usb/gadget/Kconfig:606:warning: defaults for choice values not supported
+  CHK     include/config/kernel.release
+  UPD     include/config/kernel.release
+  GEN     ./Makefile
+  WRAP    arch/arm64/include/generated/asm/bugs.h
+  WRAP    arch/arm64/include/generated/asm/clkdev.h
+  WRAP    arch/arm64/include/generated/asm/cputime.h
+  WRAP    arch/arm64/include/generated/asm/delay.h
+  WRAP    arch/arm64/include/generated/asm/div64.h
+  WRAP    arch/arm64/include/generated/asm/dma.h
+  WRAP    arch/arm64/include/generated/asm/dma-contiguous.h
+  WRAP    arch/arm64/include/generated/asm/early_ioremap.h
+  WRAP    arch/arm64/include/generated/asm/emergency-restart.h
+  WRAP    arch/arm64/include/generated/asm/errno.h
+  WRAP    arch/arm64/include/generated/asm/hw_irq.h
+  WRAP    arch/arm64/include/generated/asm/ioctl.h
+  WRAP    arch/arm64/include/generated/asm/ioctls.h
+  WRAP    arch/arm64/include/generated/asm/ipcbuf.h
+  WRAP    arch/arm64/include/generated/asm/irq_regs.h
+  WRAP    arch/arm64/include/generated/asm/kdebug.h
+  WRAP    arch/arm64/include/generated/asm/kmap_types.h
+  WRAP    arch/arm64/include/generated/asm/kvm_para.h
+  WRAP    arch/arm64/include/generated/asm/local.h
+  WRAP    arch/arm64/include/generated/asm/local64.h
+  WRAP    arch/arm64/include/generated/asm/mcs_spinlock.h
+  WRAP    arch/arm64/include/generated/asm/mm-arch-hooks.h
+  WRAP    arch/arm64/include/generated/asm/mman.h
+  WRAP    arch/arm64/include/generated/asm/msgbuf.h
+  WRAP    arch/arm64/include/generated/asm/msi.h
+  WRAP    arch/arm64/include/generated/asm/mutex.h
+  WRAP    arch/arm64/include/generated/asm/poll.h
+  WRAP    arch/arm64/include/generated/asm/preempt.h
+  WRAP    arch/arm64/include/generated/asm/resource.h
+  WRAP    arch/arm64/include/generated/asm/qrwlock.h
+  WRAP    arch/arm64/include/generated/asm/rwsem.h
+  WRAP    arch/arm64/include/generated/asm/segment.h
+  WRAP    arch/arm64/include/generated/asm/sembuf.h
+  WRAP    arch/arm64/include/generated/asm/serial.h
+  WRAP    arch/arm64/include/generated/asm/shmbuf.h
+  WRAP    arch/arm64/include/generated/asm/simd.h
+  WRAP    arch/arm64/include/generated/asm/sizes.h
+  WRAP    arch/arm64/include/generated/asm/socket.h
+  WRAP    arch/arm64/include/generated/asm/sockios.h
+  WRAP    arch/arm64/include/generated/asm/swab.h
+  WRAP    arch/arm64/include/generated/asm/switch_to.h
+  WRAP    arch/arm64/include/generated/asm/termbits.h
+  WRAP    arch/arm64/include/generated/asm/termios.h
+  WRAP    arch/arm64/include/generated/asm/trace_clock.h
+  WRAP    arch/arm64/include/generated/asm/types.h
+  WRAP    arch/arm64/include/generated/asm/unaligned.h
+  WRAP    arch/arm64/include/generated/asm/user.h
+  WRAP    arch/arm64/include/generated/asm/vga.h
+  WRAP    arch/arm64/include/generated/asm/xor.h
+  WRAP    arch/arm64/include/generated/uapi/asm/kvm_para.h
+  CHK     include/generated/uapi/linux/version.h
+  UPD     include/generated/uapi/linux/version.h
+  CHK     include/generated/utsrelease.h
+  UPD     include/generated/utsrelease.h
+  HOSTCC  scripts/basic/fixdep
+  HOSTCC  scripts/basic/bin2c
+  Using /home/suzuri/android/lineage/kernel/sony/sdm845 as source for kernel
+  HOSTCC  scripts/kallsyms
+  HOSTCC  scripts/pnmtologo
+  HOSTCC  scripts/sortextable
+  HOSTCC  scripts/dtc/dtc.o
+  HOSTCC  scripts/genksyms/genksyms.o
+  HOSTCC  scripts/dtc/flattree.o
+  SHIPPED scripts/genksyms/parse.tab.c
+  HOSTCC  scripts/dtc/fstree.o
+  SHIPPED scripts/genksyms/lex.lex.c
+  HOSTCC  scripts/dtc/data.o
+  HOSTCC  scripts/dtc/livetree.o
+  HOSTCC  scripts/dtc/treesource.o
+  SHIPPED scripts/genksyms/keywords.hash.c
+  SHIPPED scripts/genksyms/parse.tab.h
+  HOSTCC  scripts/selinux/genheaders/genheaders
+  HOSTCC  scripts/selinux/mdp/mdp
+  HOSTCC  scripts/dtc/srcpos.o
+  HOSTCC  scripts/genksyms/parse.tab.o
+  HOSTCC  scripts/dtc/checks.o
+  HOSTCC  scripts/genksyms/lex.lex.o
+  HOSTCC  scripts/dtc/util.o
+  SHIPPED scripts/dtc/dtc-parser.tab.h
+  SHIPPED scripts/dtc/dtc-lexer.lex.c
+  SHIPPED scripts/dtc/dtc-parser.tab.c
+  CC      scripts/mod/empty.o
+  HOSTCC  scripts/mod/mk_elfconfig
+  CC      scripts/mod/devicetable-offsets.s
+  HOSTCC  scripts/dtc/dtc-lexer.lex.o
+  HOSTCC  scripts/dtc/dtc-parser.tab.o
+  CHK     scripts/mod/devicetable-offsets.h
+  HOSTLD  scripts/dtc/dtc
+  UPD     scripts/mod/devicetable-offsets.h
+  HOSTLD  scripts/genksyms/genksyms
+  MKELF   scripts/mod/elfconfig.h
+  HOSTCC  scripts/mod/modpost.o
+  HOSTCC  scripts/mod/file2alias.o
+  HOSTCC  scripts/mod/sumversion.o
+  HOSTLD  scripts/mod/modpost
+  CHK     include/generated/timeconst.h
+  CC      kernel/bounds.s
+  UPD     include/generated/timeconst.h
+  CHK     include/generated/bounds.h
+  UPD     include/generated/bounds.h
+  CC      arch/arm64/kernel/asm-offsets.s
+  CHK     include/generated/asm-offsets.h
+  UPD     include/generated/asm-offsets.h
+  CALL    /home/suzuri/android/lineage/kernel/sony/sdm845/scripts/checksyscalls.sh
+  LDS     arch/arm64/kernel/vdso/vdso.lds
+  VDSOA   arch/arm64/kernel/vdso/gettimeofday.o
+  VDSOA   arch/arm64/kernel/vdso/note.o
+  VDSOA   arch/arm64/kernel/vdso/sigreturn.o
+  VDSOL   arch/arm64/kernel/vdso/vdso.so.dbg
+  VDSOSYM include/generated/vdso-offsets.h
+make[1]: Leaving directory '/tmp/kbuild-akari'
++ echo '=== prepare exit: 0 ==='
+=== prepare exit: 0 ===

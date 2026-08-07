@@ -512,7 +512,16 @@
 					dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,slotselect,avb";
+					fsmgr_flags = "wait,slotselect";
+				};
+
+				persist {
+					compatible = "android,persist";
+					dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/persist";
+					mnt_point = "/mnt/vendor/persist";
+					type = "ext4";
+					mnt_flags = "rw,noatime,nosuid,nodev,barrier=1";
+					fsmgr_flags = "wait";
 				};
 			};
 		};

@@ -55,7 +55,15 @@ CONFIG_CPUSETS=y
 CONFIG_CGROUP_CPUACCT=y
 CONFIG_CGROUP_SCHEDTUNE=y
 CONFIG_MEMCG=y
-CONFIG_RT_GROUP_SCHED=y
+# Android puts every app into a /dev/cpuctl child cgroup and those children are
+# created with cpu.rt_runtime_us = 0. With RT_GROUP_SCHED enabled the kernel
+# then rejects sched_setscheduler(SCHED_FIFO) with -EPERM for any app task,
+# regardless of CAP_SYS_NICE. That is fatal for the Bluetooth stack:
+# packages/modules/Bluetooth/system/osi/src/alarm.cc creates its timers with
+# timer_create(SIGEV_THREAD) plus a SCHED_FIFO pthread attr, the create fails,
+# and lazy_initialize() hits CHECK(false) - com.android.bluetooth then
+# native-crashes on every enable attempt. AOSP expects RT_GROUP_SCHED off.
+# CONFIG_RT_GROUP_SCHED is not set
 CONFIG_CGROUP_BPF=y
 CONFIG_SCHED_CORE_CTL=y
 CONFIG_SCHED_CORE_ROTATE=y
@@ -81,6 +89,14 @@ CONFIG_ARCH_MMAP_RND_COMPAT_BITS=16
 CONFIG_MODULES=y
 CONFIG_MODULE_UNLOAD=y
 CONFIG_MODULE_FORCE_UNLOAD=y
+# Not in the stock config. Needed so init's "insmod -f" works for the one
+# prebuilt stock module we ship, vendor/lib/modules/sony_carillon_nfc.ko (the
+# CXD224x FeliCa + ROHM BD7602 driver). Without it the kernel returns -ENOEXEC
+# from try_to_force_load() instead of honouring IGNORE_MODVERSIONS. The reason
+# the CRCs stopped matching, and why skipping them is safe here, is written out
+# in device/sony/tama-common/rootdir/etc/init.target.rc next to the insmod.
+# This does not affect any exported symbol's CRC, so it is ABI-neutral itself.
+CONFIG_MODULE_FORCE_LOAD=y
 CONFIG_MODVERSIONS=y
 CONFIG_MODULE_SIG=y
 CONFIG_MODULE_SIG_SHA512=y
@@ -289,6 +305,11 @@ CONFIG_BLK_DEV_LOOP=y
 CONFIG_BLK_DEV_RAM=y
 CONFIG_BLK_DEV_RAM_SIZE=8192
 CONFIG_QSEECOM=y
+# Fingerprint sensor (2026-08-07). drivers/misc/fpr_FingerprintCard was never
+# enabled here, so nothing bound the DT node and /sys/devices/platform/soc/soc:fpc1145
+# existed with no attributes at all - which is why fpc_fingerprint@2.1_HIDL-service
+# died on its first sysfs write. The driver source was present in this tree all along.
+CONFIG_FPR_FPC=y
 CONFIG_UID_SYS_STATS=y
 CONFIG_MEMORY_STATE_TIME=y
 CONFIG_RAMDUMP_TAGS=y
@@ -449,6 +470,61 @@ CONFIG_SND_DYNAMIC_MINORS=y
 CONFIG_SND_USB_AUDIO=y
 CONFIG_SND_USB_AUDIO_QMI=y
 CONFIG_SND_SOC=y
+
+# QTI/techpack audio stack (ADSP Q6 + WCD9340 "Tavil" codec + SDM845 machine
+# driver). Without these nothing registers an ASoC card at all: the kernel logs
+# "No soundcards found.", /dev/snd contains only "timer", and every
+# AudioSystem::listAudioPorts() call fails with -19 (ENODEV) even though
+# android.hardware.audio.service and audioserver are running. Speaker, earpiece
+# and microphone are all dead as a result.
+#
+# The source lives in techpack/audio (wired into the build by
+# arch/arm64/Kconfig -> techpack/Kconfig and Makefile's drivers-y += techpack/),
+# and the symbol list is techpack/audio/config/sdm845auto.conf. That file marks
+# some entries =m because QTI builds this techpack as an out-of-tree DLKM; we
+# have no DLKM plumbing here (BOARD_VENDOR_KERNEL_MODULES is unset and
+# /vendor/lib/modules ships no audio .ko), so everything is built in.
+# CONFIG_AHC and CONFIG_FORCE_24BIT_COPP from that file are intentionally
+# omitted: they have no Kconfig entry in this tree.
+CONFIG_MSM_QDSP6_APRV2_GLINK=y
+CONFIG_MSM_QDSP6_NOTIFIER=y
+CONFIG_MSM_QDSP6_PDR=y
+CONFIG_MSM_QDSP6_SSR=y
+CONFIG_MSM_QDSP6V2_CODECS=y
+CONFIG_MSM_GLINK_SPI_XPRT=y
+CONFIG_MSM_ADSP_LOADER=y
+CONFIG_MSM_AVTIMER=y
+CONFIG_MSM_ULTRASOUND=y
+CONFIG_MSM_CDC_PINCTRL=y
+CONFIG_PINCTRL_WCD=y
+CONFIG_SOUNDWIRE=y
+CONFIG_SOUNDWIRE_WCD_CTRL=y
+CONFIG_REGMAP_SWR=y
+CONFIG_WCD9XXX_CODEC_CORE=y
+CONFIG_WCD_DSP_GLINK=y
+CONFIG_WCD_SPI_AC=y
+CONFIG_SND_SOC_WCD9XXX_V2=y
+CONFIG_SND_SOC_WCD_MBHC=y
+CONFIG_SND_SOC_WCD_MBHC_ADC=y
+CONFIG_SND_SOC_WCD_SPI=y
+CONFIG_SND_SOC_WCD934X=y
+CONFIG_SND_SOC_WCD934X_MBHC=y
+CONFIG_SND_SOC_WCD934X_DSD=y
+CONFIG_SND_SOC_WSA881X=y
+CONFIG_SND_SOC_QDSP6V2=y
+CONFIG_SND_SOC_MSM_QDSP6V2_INTF=y
+CONFIG_SND_SOC_MSM_HOSTLESS_PCM=y
+CONFIG_SND_SOC_MSM_STUB=y
+CONFIG_SND_SOC_MSM_HDMI_CODEC_RX=y
+CONFIG_SND_SOC_SDM845=y
+CONFIG_SND_SOC_MACHINE_SDM845=y
+CONFIG_SND_HWDEP_ROUTING=y
+CONFIG_QTI_PP=y
+CONFIG_DTS_EAGLE=y
+CONFIG_DTS_SRS_TM=y
+CONFIG_DOLBY_DS2=y
+CONFIG_DOLBY_LICENSE=y
+
 CONFIG_UHID=y
 CONFIG_HID_APPLE=y
 CONFIG_HID_ELECOM=y
