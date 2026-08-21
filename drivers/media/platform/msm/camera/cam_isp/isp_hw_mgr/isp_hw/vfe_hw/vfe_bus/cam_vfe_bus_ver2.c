@@ -1589,6 +1589,12 @@ static int cam_vfe_bus_start_comp_grp(struct cam_isp_resource_node *comp_grp)
 	CAM_DBG(CAM_ISP, "comp group id:%d streaming state:%d",
 		rsrc_data->comp_grp_type, comp_grp->res_state);
 
+	CAM_INFO(CAM_ISP,
+		"VFE CG start: type=%d mask=0x%x sync_mode=%d master=%d core=%d",
+		rsrc_data->comp_grp_type, rsrc_data->composite_mask,
+		rsrc_data->addr_sync_mode, rsrc_data->is_master,
+		common_data->core_index);
+
 	cam_io_w_mb(rsrc_data->composite_mask, common_data->mem_base +
 		rsrc_data->hw_regs->comp_mask);
 	if (comp_grp->res_state == CAM_ISP_RESOURCE_STATE_STREAMING)
