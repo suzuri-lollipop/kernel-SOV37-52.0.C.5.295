@@ -9,11 +9,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #include "cam_fd_hw_core.h"
 #include "cam_fd_hw_soc.h"
@@ -34,10 +29,10 @@ static uint32_t cam_fd_cdm_write_reg_val_pair(uint32_t *buffer,
 }
 
 static void cam_fd_hw_util_cdm_callback(uint32_t handle, void *userdata,
-	enum cam_cdm_cb_status status, uint32_t cookie)
+	enum cam_cdm_cb_status status, uint64_t cookie)
 {
 	trace_cam_cdm_cb("FD", status);
-	CAM_DBG(CAM_FD, "CDM hdl=%x, udata=%pK, status=%d, cookie=%d",
+	CAM_DBG(CAM_FD, "CDM hdl=%x, udata=%pK, status=%d, cookie=%llu",
 		handle, userdata, status, cookie);
 }
 
@@ -432,6 +427,7 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 	unsigned long flags;
 	int i;
 
+	mutex_lock(&fd_hw->hw_mutex);
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	if ((fd_core->core_state != CAM_FD_CORE_STATE_IDLE) ||
 		(fd_core->results_valid == false) ||
@@ -441,6 +437,7 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 			fd_core->core_state, fd_core->results_valid,
 			fd_core->hw_req_private);
 		spin_unlock_irqrestore(&fd_core->spin_lock, flags);
+		mutex_unlock(&fd_hw->hw_mutex);
 		return -EINVAL;
 	}
 	fd_core->core_state = CAM_FD_CORE_STATE_READING_RESULTS;
@@ -521,6 +518,7 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 	fd_core->hw_req_private = NULL;
 	fd_core->core_state = CAM_FD_CORE_STATE_IDLE;
 	spin_unlock_irqrestore(&fd_core->spin_lock, flags);
+	mutex_unlock(&fd_hw->hw_mutex);
 
 	return 0;
 }
@@ -537,7 +535,7 @@ irqreturn_t cam_fd_hw_irq(int irq_num, void *data)
 
 	if (!fd_hw) {
 		CAM_ERR(CAM_FD, "Invalid data in IRQ callback");
-		return -EINVAL;
+		return IRQ_NONE;
 	}
 
 	fd_core = (struct cam_fd_core *) fd_hw->core_info;
@@ -575,7 +573,7 @@ irqreturn_t cam_fd_hw_irq(int irq_num, void *data)
 		CAM_ERR(CAM_FD,
 			"Invalid number of IRQs, value=0x%x, num_irqs=%d",
 			reg_value, num_irqs);
-		return -EINVAL;
+		return IRQ_NONE;
 	}
 
 	trace_cam_irq_activated("FD", irq_type);
@@ -1097,6 +1095,7 @@ int cam_fd_hw_release(void *hw_priv, void *hw_release_args, uint32_t arg_size)
 		CAM_ERR(CAM_FD, "Release cdm handle failed, handle=0x%x, rc=%d",
 			ctx_hw_private->cdm_handle, rc);
 
+	kfree(ctx_hw_private->cdm_cmd);
 	kfree(ctx_hw_private);
 	release_args->ctx_hw_private = NULL;
 

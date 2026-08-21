@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,6 +24,9 @@
 #include "cam_smmu_api.h"
 #include "cam_cdm_intf_api.h"
 #include "cam_cdm.h"
+
+#include <linux/debugfs.h>
+#include <linux/seq_file.h>
 #include "cam_cdm_core_common.h"
 #include "cam_cdm_soc.h"
 #include "cam_io_util.h"
@@ -422,7 +425,7 @@ int cam_hw_cdm_submit_bl(struct cam_hw_info *cdm_hw,
 	}
 
 	for (i = 0; i < req->data->cmd_arrary_count ; i++) {
-		uint64_t hw_vaddr_ptr = 0;
+		dma_addr_t hw_vaddr_ptr = 0;
 		size_t len = 0;
 
 		if ((!cdm_cmd->cmd[i].len) &&
@@ -470,7 +473,7 @@ int cam_hw_cdm_submit_bl(struct cam_hw_info *cdm_hw,
 			}
 			rc = 0;
 			hw_vaddr_ptr =
-				(uint64_t)cdm_cmd->cmd[i].bl_addr.hw_iova;
+				(dma_addr_t) cdm_cmd->cmd[i].bl_addr.hw_iova;
 			len = cdm_cmd->cmd[i].len + cdm_cmd->cmd[i].offset;
 		} else {
 			CAM_ERR(CAM_CDM,
@@ -624,7 +627,8 @@ static void cam_hw_cdm_work(struct work_struct *work)
 }
 
 static void cam_hw_cdm_iommu_fault_handler(struct iommu_domain *domain,
-	struct device *dev, unsigned long iova, int flags, void *token)
+	struct device *dev, unsigned long iova, int flags, void *token,
+	uint32_t buf_info)
 {
 	struct cam_hw_info *cdm_hw = NULL;
 	struct cam_cdm *core = NULL;
@@ -827,6 +831,72 @@ int cam_hw_cdm_deinit(void *hw_priv,
 	return rc;
 }
 
+/* SOV37 debug: CDM register dump via debugfs */
+static struct cam_hw_info *cam_cdm_dbg_hw;
+
+static int cam_cdm_dbg_regs_show(struct seq_file *sf, void *unused)
+{
+	struct cam_hw_info *cdm_hw = cam_cdm_dbg_hw;
+	struct {
+		const char *name;
+		enum cam_cdm_regs reg;
+	} regs[] = {
+		{ "HW_VERSION", CDM_CFG_HW_VERSION },
+		{ "TITAN_VERSION", CDM_CFG_TITAN_VERSION },
+		{ "CORE_CFG", CDM_CFG_CORE_CFG },
+		{ "CORE_EN", CDM_CFG_CORE_EN },
+		{ "FE_CFG", CDM_CFG_FE_CFG },
+		{ "IRQ_MASK", CDM_IRQ_MASK },
+		{ "IRQ_STATUS", CDM_IRQ_STATUS },
+		{ "IRQ_USR_DATA", CDM_IRQ_USR_DATA },
+		{ "BL_FIFO_RB", CDM_BL_FIFO_RB },
+		{ "BL_FIFO_BASE_RB", CDM_BL_FIFO_BASE_RB },
+		{ "BL_FIFO_LEN_RB", CDM_BL_FIFO_LEN_RB },
+		{ "BL_FIFO_PENDING_REQ_RB", CDM_BL_FIFO_PENDING_REQ_RB },
+		{ "WAIT_STATUS", CDM_DBG_WAIT_STATUS },
+		{ "LAST_AHB_ADDR", CDM_DBG_LAST_AHB_ADDR },
+		{ "LAST_AHB_DATA", CDM_DBG_LAST_AHB_DATA },
+		{ "LAST_AHB_ERR_ADDR", CDM_DBG_LAST_AHB_ERR_ADDR },
+		{ "LAST_AHB_ERR_DATA", CDM_DBG_LAST_AHB_ERR_DATA },
+		{ "CURRENT_BL_BASE", CDM_DBG_CURRENT_BL_BASE },
+		{ "CURRENT_BL_LEN", CDM_DBG_CURRENT_BL_LEN },
+		{ "CURRENT_USED_AHB_BASE", CDM_DBG_CURRENT_USED_AHB_BASE },
+		{ "DEBUG_STATUS", CDM_DBG_DEBUG_STATUS },
+	};
+	int i;
+	uint32_t val;
+
+	if (!cdm_hw) {
+		seq_puts(sf, "no cdm hw\n");
+		return 0;
+	}
+	if (cdm_hw->open_count <= 0) {
+		seq_printf(sf, "CDM not open (open_count=%d); skipping reads\n",
+			cdm_hw->open_count);
+		return 0;
+	}
+	for (i = 0; i < ARRAY_SIZE(regs); i++) {
+		if (cam_cdm_read_hw_reg(cdm_hw, regs[i].reg, &val))
+			seq_printf(sf, "CDMDUMP %s: READ_ERR\n", regs[i].name);
+		else
+			seq_printf(sf, "CDMDUMP %s: 0x%08x\n", regs[i].name,
+				val);
+	}
+	return 0;
+}
+
+static int cam_cdm_dbg_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, cam_cdm_dbg_regs_show, NULL);
+}
+
+static const struct file_operations cam_cdm_dbg_fops = {
+	.open    = cam_cdm_dbg_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = single_release,
+};
+
 int cam_hw_cdm_probe(struct platform_device *pdev)
 {
 	int rc;
@@ -910,7 +980,7 @@ int cam_hw_cdm_probe(struct platform_device *pdev)
 		CAM_ERR(CAM_CDM, "cpas-cdm get iommu handle failed");
 		goto unlock_release_mem;
 	}
-	cam_smmu_reg_client_page_fault_handler(cdm_core->iommu_hdl.non_secure,
+	cam_smmu_set_client_page_fault_handler(cdm_core->iommu_hdl.non_secure,
 		cam_hw_cdm_iommu_fault_handler, cdm_hw);
 
 	rc = cam_smmu_ops(cdm_core->iommu_hdl.non_secure, CAM_SMMU_ATTACH);
@@ -1015,6 +1085,15 @@ int cam_hw_cdm_probe(struct platform_device *pdev)
 
 	CAM_DBG(CAM_CDM, "CDM%d probe successful", cdm_hw_intf->hw_idx);
 
+	cam_cdm_dbg_hw = cdm_hw;
+	{
+		struct dentry *d = debugfs_create_dir("cdm_dbg", NULL);
+
+		if (d)
+			debugfs_create_file("regs", 0444, d, NULL,
+				&cam_cdm_dbg_fops);
+	}
+
 	return rc;
 
 deinit:
@@ -1034,7 +1113,7 @@ release_platform_resource:
 	flush_workqueue(cdm_core->work_queue);
 	destroy_workqueue(cdm_core->work_queue);
 destroy_non_secure_hdl:
-	cam_smmu_reg_client_page_fault_handler(cdm_core->iommu_hdl.non_secure,
+	cam_smmu_set_client_page_fault_handler(cdm_core->iommu_hdl.non_secure,
 		NULL, cdm_hw);
 	if (cam_smmu_destroy_handle(cdm_core->iommu_hdl.non_secure))
 		CAM_ERR(CAM_CDM, "Release iommu secure hdl failed");
@@ -1106,8 +1185,8 @@ int cam_hw_cdm_remove(struct platform_device *pdev)
 
 	if (cam_smmu_destroy_handle(cdm_core->iommu_hdl.non_secure))
 		CAM_ERR(CAM_CDM, "Release iommu secure hdl failed");
-	cam_smmu_reg_client_page_fault_handler(cdm_core->iommu_hdl.non_secure,
-		NULL, cdm_hw);
+	cam_smmu_unset_client_page_fault_handler(
+		cdm_core->iommu_hdl.non_secure, cdm_hw);
 
 	mutex_destroy(&cdm_hw->hw_mutex);
 	kfree(cdm_hw->soc_info.soc_private);
@@ -1125,6 +1204,7 @@ static struct platform_driver cam_hw_cdm_driver = {
 		.name = "msm_cam_cdm",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_cam_hw_cdm_dt_match,
+		.suppress_bind_attrs = true,
 	},
 };
 

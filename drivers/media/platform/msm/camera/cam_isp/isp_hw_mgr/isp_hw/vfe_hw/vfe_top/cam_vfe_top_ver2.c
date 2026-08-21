@@ -9,11 +9,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #include <linux/slab.h>
 #include "cam_io_util.h"
@@ -39,14 +34,14 @@ struct cam_vfe_top_ver2_priv {
 	struct cam_vfe_top_ver2_common_data common_data;
 	struct cam_isp_resource_node        mux_rsrc[CAM_VFE_TOP_VER2_MUX_MAX];
 	unsigned long                       hw_clk_rate;
-	enum cam_vfe_bw_control_action      axi_vote_control[
-						CAM_VFE_TOP_VER2_MUX_MAX];
 	struct cam_axi_vote                 applied_axi_vote;
-	struct cam_axi_vote                 last_vote[CAM_VFE_TOP_VER2_MUX_MAX *
-						CAM_VFE_DELAY_BW_REDUCTION_NUM_FRAMES];
-	uint32_t                            last_counter;
 	struct cam_axi_vote             req_axi_vote[CAM_VFE_TOP_VER2_MUX_MAX];
 	unsigned long                   req_clk_rate[CAM_VFE_TOP_VER2_MUX_MAX];
+	struct cam_axi_vote             last_vote[CAM_VFE_TOP_VER2_MUX_MAX *
+					CAM_VFE_DELAY_BW_REDUCTION_NUM_FRAMES];
+	uint32_t                        last_counter;
+	enum cam_vfe_bw_control_action
+		axi_vote_control[CAM_VFE_TOP_VER2_MUX_MAX];
 };
 
 static int cam_vfe_top_mux_get_base(struct cam_vfe_top_ver2_priv *top_priv,
@@ -112,14 +107,11 @@ static int cam_vfe_top_set_hw_clk_rate(
 	if (max_clk_rate == top_priv->hw_clk_rate)
 		return 0;
 
-	CAM_DBG(CAM_ISP, "VFE: Clock name=%s idx=%d clk=%lld",
+	CAM_DBG(CAM_ISP, "VFE: Clock name=%s idx=%d clk=%llu",
 		soc_info->clk_name[soc_info->src_clk_idx],
 		soc_info->src_clk_idx, max_clk_rate);
 
-	rc = cam_soc_util_set_clk_rate(
-		soc_info->clk[soc_info->src_clk_idx],
-		soc_info->clk_name[soc_info->src_clk_idx],
-		max_clk_rate);
+	rc = cam_soc_util_set_src_clk_rate(soc_info, max_clk_rate);
 
 	if (!rc)
 		top_priv->hw_clk_rate = max_clk_rate;
@@ -181,13 +173,11 @@ static int cam_vfe_top_set_axi_bw_vote(
 	if (start_stop == true) {
 		/* need to vote current request immediately */
 		to_be_applied_axi_vote = sum;
-
 		/* Reset everything, we can start afresh */
 		memset(top_priv->last_vote, 0x0, sizeof(struct cam_axi_vote) *
 			(CAM_VFE_TOP_VER2_MUX_MAX *
 			CAM_VFE_DELAY_BW_REDUCTION_NUM_FRAMES));
 		top_priv->last_counter = 0;
-
 		top_priv->last_vote[top_priv->last_counter] = sum;
 		top_priv->last_counter = (top_priv->last_counter + 1) %
 			(CAM_VFE_TOP_VER2_MUX_MAX *
@@ -195,7 +185,7 @@ static int cam_vfe_top_set_axi_bw_vote(
 	} else {
 		/*
 		 * Find max bw request in last few frames. This will the bw
-		 *  that we want to vote to CPAS now.
+		 *that we want to vote to CPAS now.
 		 */
 		for (i = 0; i < (CAM_VFE_TOP_VER2_MUX_MAX *
 			CAM_VFE_DELAY_BW_REDUCTION_NUM_FRAMES); i++) {
@@ -214,9 +204,8 @@ static int cam_vfe_top_set_axi_bw_vote(
 	if ((to_be_applied_axi_vote.uncompressed_bw !=
 		top_priv->applied_axi_vote.uncompressed_bw) ||
 		(to_be_applied_axi_vote.compressed_bw !=
-		top_priv->applied_axi_vote.compressed_bw)) {
+		top_priv->applied_axi_vote.compressed_bw))
 		apply_bw_update = true;
-	}
 
 	CAM_DBG(CAM_ISP, "apply_bw_update=%d", apply_bw_update);
 
@@ -226,7 +215,7 @@ static int cam_vfe_top_set_axi_bw_vote(
 			&to_be_applied_axi_vote);
 		if (!rc) {
 			top_priv->applied_axi_vote.uncompressed_bw =
-				to_be_applied_axi_vote.uncompressed_bw;
+			to_be_applied_axi_vote.uncompressed_bw;
 			top_priv->applied_axi_vote.compressed_bw =
 				to_be_applied_axi_vote.compressed_bw;
 		} else {
@@ -273,7 +262,8 @@ static int cam_vfe_top_clock_update(
 	}
 
 	if (hw_info->hw_state != CAM_HW_STATE_POWER_UP) {
-		CAM_DBG(CAM_ISP, "VFE:%d Not ready to set clocks yet :%d",
+		CAM_DBG(CAM_ISP,
+			"VFE:%d Not ready to set clocks yet :%d",
 			res->hw_intf->hw_idx,
 			hw_info->hw_state);
 	} else
@@ -321,7 +311,8 @@ static int cam_vfe_top_bw_update(
 	}
 
 	if (hw_info->hw_state != CAM_HW_STATE_POWER_UP) {
-		CAM_DBG(CAM_ISP, "VFE:%d Not ready to set BW yet :%d",
+		CAM_ERR_RATE_LIMIT(CAM_ISP,
+			"VFE:%d Not ready to set BW yet :%d",
 			res->hw_intf->hw_idx,
 			hw_info->hw_state);
 	} else
@@ -364,7 +355,8 @@ static int cam_vfe_top_bw_control(
 	}
 
 	if (hw_info->hw_state != CAM_HW_STATE_POWER_UP) {
-		CAM_DBG(CAM_ISP, "VFE:%d Not ready to set BW yet :%d",
+		CAM_ERR_RATE_LIMIT(CAM_ISP,
+			"VFE:%d Not ready to set BW yet :%d",
 			res->hw_intf->hw_idx,
 			hw_info->hw_state);
 	} else {
@@ -517,6 +509,7 @@ int cam_vfe_top_start(void *device_priv,
 {
 	struct cam_vfe_top_ver2_priv            *top_priv;
 	struct cam_isp_resource_node            *mux_res;
+	struct cam_hw_info                      *hw_info = NULL;
 	int rc = 0;
 
 	if (!device_priv || !start_args) {
@@ -526,24 +519,33 @@ int cam_vfe_top_start(void *device_priv,
 
 	top_priv = (struct cam_vfe_top_ver2_priv *)device_priv;
 	mux_res = (struct cam_isp_resource_node *)start_args;
+	hw_info = (struct cam_hw_info  *)mux_res->hw_intf->hw_priv;
 
-	rc = cam_vfe_top_set_hw_clk_rate(top_priv);
-	if (rc) {
-		CAM_ERR(CAM_ISP, "set_hw_clk_rate failed, rc=%d", rc);
-		return rc;
-	}
+	if (hw_info->hw_state == CAM_HW_STATE_POWER_UP) {
+		rc = cam_vfe_top_set_hw_clk_rate(top_priv);
+		if (rc) {
+			CAM_ERR(CAM_ISP,
+				"set_hw_clk_rate failed, rc=%d", rc);
+			return rc;
+		}
 
-	rc = cam_vfe_top_set_axi_bw_vote(top_priv, true);
-	if (rc) {
-		CAM_ERR(CAM_ISP, "set_axi_bw_vote failed, rc=%d", rc);
-		return rc;
-	}
+		rc = cam_vfe_top_set_axi_bw_vote(top_priv, true);
+		if (rc) {
+			CAM_ERR(CAM_ISP,
+				"set_axi_bw_vote failed, rc=%d", rc);
+			return rc;
+		}
 
-	if (mux_res->start) {
-		rc = mux_res->start(mux_res);
+		if (mux_res->start) {
+			rc = mux_res->start(mux_res);
+		} else {
+			CAM_ERR(CAM_ISP,
+				"Invalid res id:%d", mux_res->res_id);
+			rc = -EINVAL;
+		}
 	} else {
-		CAM_ERR(CAM_ISP, "Invalid res id:%d", mux_res->res_id);
-		rc = -EINVAL;
+		CAM_ERR(CAM_ISP, "VFE HW not powered up");
+		rc = -EPERM;
 	}
 
 	return rc;
@@ -554,6 +556,7 @@ int cam_vfe_top_stop(void *device_priv,
 {
 	struct cam_vfe_top_ver2_priv            *top_priv;
 	struct cam_isp_resource_node            *mux_res;
+	struct cam_hw_info                      *hw_info = NULL;
 	int i, rc = 0;
 
 	if (!device_priv || !stop_args) {
@@ -563,6 +566,7 @@ int cam_vfe_top_stop(void *device_priv,
 
 	top_priv = (struct cam_vfe_top_ver2_priv   *)device_priv;
 	mux_res = (struct cam_isp_resource_node *)stop_args;
+	hw_info = (struct cam_hw_info  *)mux_res->hw_intf->hw_priv;
 
 	if (mux_res->res_id == CAM_ISP_HW_VFE_IN_CAMIF ||
 		(mux_res->res_id >= CAM_ISP_HW_VFE_IN_RDI0 &&
@@ -585,16 +589,25 @@ int cam_vfe_top_stop(void *device_priv,
 			}
 		}
 
-		rc = cam_vfe_top_set_hw_clk_rate(top_priv);
-		if (rc) {
-			CAM_ERR(CAM_ISP, "set_hw_clk_rate failed, rc=%d", rc);
-			return rc;
-		}
+		if (hw_info->hw_state == CAM_HW_STATE_POWER_UP) {
+			rc = cam_vfe_top_set_hw_clk_rate(top_priv);
+			if (rc) {
+				CAM_ERR(CAM_ISP,
+					"set_hw_clk_rate failed, rc=%d", rc);
+				return rc;
+			}
 
-		rc = cam_vfe_top_set_axi_bw_vote(top_priv, true);
-		if (rc) {
-			CAM_ERR(CAM_ISP, "set_axi_bw_vote failed, rc=%d", rc);
-			return rc;
+		top_priv->hw_clk_rate = 0;
+
+			rc = cam_vfe_top_set_axi_bw_vote(top_priv, true);
+			if (rc) {
+				CAM_ERR(CAM_ISP,
+					"set_axi_bw_vote failed, rc=%d", rc);
+				return rc;
+			}
+		} else {
+			CAM_ERR(CAM_ISP, "VFE HW not powered up");
+			rc = -EPERM;
 		}
 	}
 
